@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abhijeet Library - Personal Gaming, Movies, Anime & Web Series Archive</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            },
+            cat: {
+              gaming: '#8b5cf6',
+              movies: '#f59e0b',
+              anime: '#f43f5e',
+              webseries: '#06b6d4',
+            },
+            surface: {
+              base: '#0c0e14',
+              card: '#151823',
+              subtle: '#1d2232',
+              border: '#273046'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0c0e14; }
+    ::-webkit-scrollbar-thumb { background: #273046; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3c4966; }
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #273046;
+      height: 6px;
+      border-radius: 9999px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #8b5cf6;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
+      transition: transform 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.18); }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-surface-base text-gray-100 min-h-screen flex flex-col antialiased selection:bg-brand-600 selection:text-white">
+
+  <!-- Feedback Toast Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-rose-400">
+        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+        <h3 class="text-lg font-bold text-white" id="confirmTitle">Confirm Action</h3>
+      </div>
+      <p class="text-sm text-gray-300" id="confirmMsg">Are you sure you want to proceed?</p>
+      <div class="flex justify-end gap-3 pt-2">
+        <button id="confirmCancelBtn" class="px-4 py-2 rounded-xl bg-surface-subtle text-gray-300 hover:text-white border border-surface-border transition text-xs font-semibold">Cancel</button>
+        <button id="confirmOkBtn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs shadow-lg shadow-rose-900/30 transition">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="border-b border-surface-border/80 sticky top-0 bg-surface-base/90 backdrop-blur-md z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Title & Branding -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+          <i class="fa-solid fa-compact-disc text-white text-xl animate-spin-slow"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-black tracking-tight text-white">Abhijeet Library</h1>
+            <span id="adminBadge" class="hidden text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+              <i class="fa-solid fa-lock-open mr-1"></i>Admin Mode
+            </span>
+          </div>
+          <p class="text-xs text-gray-400 font-medium">Personal Gaming, Movies, Anime & Web Series Archive</p>
+        </div>
+      </div>
+
+      <!-- Search & Admin Controls -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        <!-- Live Search -->
+        <div class="relative flex-1 sm:w-64">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search title, director, studio, genre..."
+            class="w-full bg-surface-card border border-surface-border rounded-xl pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-500 transition"
+            oninput="handleSearch(this.value)"
+          >
+        </div>
+
+        <!-- Backup Data / Export & Import -->
+        <button 
+          onclick="exportDataBackup()" 
+          class="flex items-center justify-center w-10 h-10 text-sm font-semibold rounded-xl bg-surface-card border border-surface-border text-gray-300 hover:text-white hover:border-brand-500/50 transition" 
+          title="Backup JSON Data"
+        >
+          <i class="fa-solid fa-download text-xs text-cyan-400"></i>
+        </button>
+        <button 
+          id="importBtn"
+          onclick="triggerImport()" 
+          class="hidden items-center justify-center w-10 h-10 text-sm font-semibold rounded-xl bg-surface-card border border-surface-border text-gray-300 hover:text-white hover:border-brand-500/50 transition" 
+          title="Restore / Import JSON Data"
+        >
+          <i class="fa-solid fa-upload text-xs text-indigo-400"></i>
+        </button>
+        <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="handleFileImport(event)">
+
+        <!-- Admin Unlock / Lock Toggle -->
+        <button 
+          id="adminToggleBtn" 
+          onclick="toggleAdminAccess()" 
+          class="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold rounded-xl bg-surface-card border border-surface-border text-gray-300 hover:text-white hover:border-brand-500/50 transition"
+          title="Toggle Admin Permissions"
+        >
+          <i id="lockIcon" class="fa-solid fa-lock text-brand-500"></i>
+          <span id="adminBtnLabel">Unlock Admin</span>
+        </button>
+
+        <!-- Admin Settings (Passcode change) -->
+        <button 
+          id="adminSettingsBtn" 
+          onclick="openPassChangeModal()" 
+          class="hidden items-center justify-center w-10 h-10 text-sm font-semibold rounded-xl bg-surface-card border border-surface-border text-gray-300 hover:text-white hover:border-brand-500/50 transition"
+          title="Change Admin Passcode"
+        >
+          <i class="fa-solid fa-key text-xs text-amber-400"></i>
+        </button>
+
+        <!-- Add Entry Button -->
+        <button 
+          id="addEntryBtn" 
+          onclick="openEntryModal()" 
+          class="hidden items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/30 transition transform active:scale-95"
+        >
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Add Entry</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Tabs & Filtering Bar -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3 border-t border-surface-border/50 text-xs">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Category Tabs -->
+        <div class="flex bg-surface-card border border-surface-border rounded-xl p-1 gap-1">
+          <button class="filter-btn px-3 py-1.5 rounded-lg font-semibold text-white bg-brand-600 shadow-sm transition" data-filter="all" onclick="applyCategoryFilter('all')">
+            All (<span id="countAll">0</span>)
+          </button>
+          <button class="filter-btn px-3 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-gray-200 transition" data-filter="gaming" onclick="applyCategoryFilter('gaming')">
+            <i class="fa-solid fa-gamepad text-cat-gaming mr-1"></i> Gaming (<span id="countGaming">0</span>)
+          </button>
+          <button class="filter-btn px-3 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-gray-200 transition" data-filter="movies" onclick="applyCategoryFilter('movies')">
+            <i class="fa-solid fa-film text-cat-movies mr-1"></i> Movies (<span id="countMovies">0</span>)
+          </button>
+          <button class="filter-btn px-3 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-gray-200 transition" data-filter="anime" onclick="applyCategoryFilter('anime')">
+            <i class="fa-solid fa-dragon text-cat-anime mr-1"></i> Anime (<span id="countAnime">0</span>)
+          </button>
+          <button class="filter-btn px-3 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-gray-200 transition" data-filter="webseries" onclick="applyCategoryFilter('webseries')">
+            <i class="fa-solid fa-tv text-cat-webseries mr-1"></i> Web Series (<span id="countWebseries">0</span>)
+          </button>
+        </div>
+
+        <!-- Played/Watched Year Filter -->
+        <div class="flex items-center gap-1.5 bg-surface-card border border-surface-border rounded-xl px-2.5 py-1.5">
+          <i class="fa-regular fa-calendar text-gray-400 text-xs"></i>
+          <select id="yearFilter" onchange="renderCards()" class="bg-transparent text-gray-200 text-xs focus:outline-none cursor-pointer">
+            <option value="all">All Watched/Played Years</option>
+          </select>
+        </div>
+
+        <!-- Watched/Played Month Filter -->
+        <div class="flex items-center gap-1.5 bg-surface-card border border-surface-border rounded-xl px-2.5 py-1.5">
+          <i class="fa-regular fa-calendar-days text-gray-400 text-xs"></i>
+          <select id="monthFilter" onchange="renderCards()" class="bg-transparent text-gray-200 text-xs focus:outline-none cursor-pointer">
+            <option value="all">All Months</option>
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
+          </select>
+        </div>
+
+        <!-- Clear Date Filter Button -->
+        <button id="resetDateFiltersBtn" onclick="resetDateFilters()" class="hidden text-[11px] text-brand-400 hover:underline">
+          Clear Date Filters
+        </button>
+      </div>
+
+      <!-- Sorting Select -->
+      <div class="flex items-center gap-2 text-gray-400">
+        <span>Sort by:</span>
+        <select id="sortSelect" onchange="renderCards()" class="bg-surface-card border border-surface-border text-gray-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-brand-500 cursor-pointer">
+          <option value="watchedDate">Latest Watched / Played Date</option>
+          <option value="highest">Highest Final Rating</option>
+          <option value="releaseYear">Year of Release (Newest)</option>
+          <option value="title">Alphabetical (A-Z)</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+    <!-- Active Filter Info Indicator -->
+    <div id="filterStatus" class="mb-4 text-xs text-gray-400 hidden items-center gap-2">
+      <span>Active Filters:</span>
+      <span id="activeFilterBadge" class="bg-brand-500/10 border border-brand-500/30 text-brand-400 px-2 py-0.5 rounded-md font-semibold"></span>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden flex-col items-center justify-center py-24 text-center">
+      <div class="w-16 h-16 rounded-full bg-surface-card border border-surface-border flex items-center justify-center text-gray-500 text-2xl mb-4">
+        <i class="fa-solid fa-ghost"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-300">No entries found</h3>
+      <p class="text-sm text-gray-500 mt-1 max-w-sm">No items match your selected category, search criteria, or date filters.</p>
+      <button onclick="resetAllFilters()" class="mt-4 px-4 py-2 bg-surface-card border border-surface-border hover:border-brand-500 text-xs font-semibold rounded-xl text-gray-300 hover:text-white transition">
+        Reset All Filters
+      </button>
+    </div>
+
+    <!-- Cards Grid -->
+    <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-surface-border/60 py-6 text-center text-xs text-gray-500 mt-auto">
+    <p>© Abhijeet Library • Curated Gaming, Cinema, Anime & Web Series Archive</p>
+    <p class="mt-1 text-[11px] text-gray-600">Personal database backed by browser local storage. Keep regular JSON backups.</p>
+  </footer>
+
+  <!-- ======================== MODALS ======================== -->
+
+  <!-- Unlock Passcode Modal -->
+  <div id="passModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+      <button onclick="closePassModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-brand-600/20 text-brand-500 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-white text-base">Admin Authentication</h3>
+          <p class="text-xs text-gray-400">Unlock Abhijeet Library controls</p>
+        </div>
+      </div>
+      <form id="passForm" onsubmit="handlePassSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">Master Passcode</label>
+          <input 
+            type="password" 
+            id="adminPassInput" 
+            placeholder="Enter passcode"
+            class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" 
+            required 
+            autofocus
+          >
+          <span id="passError" class="text-rose-400 text-xs hidden mt-1 block">Incorrect passcode. Try again.</span>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closePassModal()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-surface-subtle text-gray-300 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/30">Authenticate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Passcode Modal -->
+  <div id="passChangeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+      <button onclick="closePassChangeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-white text-base">Change Passcode</h3>
+          <p class="text-xs text-gray-400">Update your stored master passcode</p>
+        </div>
+      </div>
+      <form id="passChangeForm" onsubmit="handlePasscodeChange(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">Current Passcode</label>
+          <input type="password" id="currentPassInput" required class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">New Passcode</label>
+          <input type="password" id="newPassInput" required minlength="4" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1">Confirm New Passcode</label>
+          <input type="password" id="confirmNewPassInput" required class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+        </div>
+        <span id="passChangeError" class="text-rose-400 text-xs hidden block"></span>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closePassChangeModal()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-surface-subtle text-gray-300 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-600/30">Save Passcode</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Entry Form Modal (Add / Edit) -->
+  <div id="entryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-2xl w-full p-6 sm:p-8 my-8 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="closeEntryModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-6 border-b border-surface-border pb-4">
+        <div id="modalIconBox" class="w-10 h-10 rounded-xl bg-brand-600/20 text-brand-500 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </div>
+        <div>
+          <h2 id="modalTitle" class="text-xl font-bold text-white">Add Review Entry</h2>
+          <p class="text-xs text-gray-400">Save detailed impressions, custom ratings, and highlights</p>
+        </div>
+      </div>
+
+      <form id="entryForm" onsubmit="handleEntrySubmit(event)" class="space-y-5">
+        <input type="hidden" id="entryId">
+
+        <!-- Category Radio Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-300 mb-1.5">Category</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <label class="flex items-center justify-center gap-1.5 p-2.5 bg-surface-base border border-surface-border rounded-xl cursor-pointer hover:border-cat-gaming/50 has-[:checked]:border-cat-gaming has-[:checked]:bg-cat-gaming/10 transition">
+              <input type="radio" name="entryCatRadio" value="gaming" checked onchange="switchCategoryFields('gaming')" class="accent-cat-gaming">
+              <span class="text-xs font-bold text-white"><i class="fa-solid fa-gamepad text-cat-gaming mr-1"></i>Gaming</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2.5 bg-surface-base border border-surface-border rounded-xl cursor-pointer hover:border-cat-movies/50 has-[:checked]:border-cat-movies has-[:checked]:bg-cat-movies/10 transition">
+              <input type="radio" name="entryCatRadio" value="movies" onchange="switchCategoryFields('movies')" class="accent-cat-movies">
+              <span class="text-xs font-bold text-white"><i class="fa-solid fa-film text-cat-movies mr-1"></i>Movies</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2.5 bg-surface-base border border-surface-border rounded-xl cursor-pointer hover:border-cat-anime/50 has-[:checked]:border-cat-anime has-[:checked]:bg-cat-anime/10 transition">
+              <input type="radio" name="entryCatRadio" value="anime" onchange="switchCategoryFields('anime')" class="accent-cat-anime">
+              <span class="text-xs font-bold text-white"><i class="fa-solid fa-dragon text-cat-anime mr-1"></i>Anime</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2.5 bg-surface-base border border-surface-border rounded-xl cursor-pointer hover:border-cat-webseries/50 has-[:checked]:border-cat-webseries has-[:checked]:bg-cat-webseries/10 transition">
+              <input type="radio" name="entryCatRadio" value="webseries" onchange="switchCategoryFields('webseries')" class="accent-cat-webseries">
+              <span class="text-xs font-bold text-white"><i class="fa-solid fa-tv text-cat-webseries mr-1"></i>Webseries</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Universal Basics: Title & Image -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-300 mb-1.5">Title *</label>
+            <input type="text" id="fTitle" required placeholder="e.g. Elden Ring, Dune 2, Attack on Titan" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-300 mb-1.5">Poster / Cover Image URL *</label>
+            <input type="url" id="fImage" required placeholder="https://image-link.jpg" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+
+        <!-- Dynamic Category-Specific Metadata Fields -->
+        <div id="dynamicFieldsContainer" class="space-y-4">
+          <!-- Injected dynamically by switchCategoryFields() -->
+        </div>
+
+        <!-- Rating Across Different Sections (Sliders) -->
+        <div class="bg-surface-base p-4 rounded-xl border border-surface-border/80 space-y-3">
+          <div class="flex items-center justify-between border-b border-surface-border/50 pb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-brand-400">Rating Across Different Sections (1 - 10)</span>
+            <span class="text-xs text-gray-400 font-medium">Final Rating: <strong id="calculatedAvgScore" class="text-amber-400 font-bold text-sm">8.0</strong> / 10</span>
+          </div>
+
+          <!-- Section 1 -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-gray-300 mb-1">
+              <span id="subLabel1">Section 1</span>
+              <span id="subValDisp1" class="text-brand-400 font-bold">8.0</span>
+            </div>
+            <input type="range" id="subVal1" min="1" max="10" step="0.5" value="8" oninput="updateLiveScore()" class="w-full">
+          </div>
+
+          <!-- Section 2 -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-gray-300 mb-1">
+              <span id="subLabel2">Section 2</span>
+              <span id="subValDisp2" class="text-brand-400 font-bold">8.0</span>
+            </div>
+            <input type="range" id="subVal2" min="1" max="10" step="0.5" value="8" oninput="updateLiveScore()" class="w-full">
+          </div>
+
+          <!-- Section 3 -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-gray-300 mb-1">
+              <span id="subLabel3">Section 3</span>
+              <span id="subValDisp3" class="text-brand-400 font-bold">8.0</span>
+            </div>
+            <input type="range" id="subVal3" min="1" max="10" step="0.5" value="8" oninput="updateLiveScore()" class="w-full">
+          </div>
+
+          <!-- Section 4 -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-gray-300 mb-1">
+              <span id="subLabel4">Section 4</span>
+              <span id="subValDisp4" class="text-brand-400 font-bold">8.0</span>
+            </div>
+            <input type="range" id="subVal4" min="1" max="10" step="0.5" value="8" oninput="updateLiveScore()" class="w-full">
+          </div>
+
+          <!-- Section 5 -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-gray-300 mb-1">
+              <span id="subLabel5">Section 5</span>
+              <span id="subValDisp5" class="text-brand-400 font-bold">8.0</span>
+            </div>
+            <input type="range" id="subVal5" min="1" max="10" step="0.5" value="8" oninput="updateLiveScore()" class="w-full">
+          </div>
+        </div>
+
+        <!-- Dynamic Category-Specific Highlights / Arcs -->
+        <div id="dynamicHighlightsContainer" class="space-y-4">
+          <!-- Injected dynamically by switchCategoryFields() -->
+        </div>
+
+        <!-- Pros & Cons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-emerald-400 mb-1.5"><i class="fa-solid fa-plus-circle mr-1"></i> Pros (comma separated)</label>
+            <textarea id="fPros" rows="2" placeholder="Brilliant execution, memorable soundtrack, great pacing" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-rose-400 mb-1.5"><i class="fa-solid fa-minus-circle mr-1"></i> Cons (comma separated)</label>
+            <textarea id="fCons" rows="2" placeholder="Slight pacing dip in mid section" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"></textarea>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-surface-border">
+          <button type="button" onclick="closeEntryModal()" class="px-5 py-2.5 text-xs font-semibold rounded-xl bg-surface-subtle text-gray-300 hover:text-white transition">Cancel</button>
+          <button type="submit" class="px-6 py-2.5 text-xs font-semibold rounded-xl bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/30 transition">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail Card View Modal -->
+  <div id="viewModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-surface-card border border-surface-border rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto" id="viewModalContent">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // INITIAL CONSTANTS & SCHEMAS
+    // ==========================================
+    const DEFAULT_MASTER_PASS = "thisismyworld";
+    const PASS_STORAGE_KEY = "abhijeet_library_passcode";
+    const STORAGE_KEY = "abhijeet_library_vault_v3";
+
+    const MONTH_NAMES = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    const SECTIONS_CONFIG = {
+      anime: [
+        "Animation & Art",
+        "Story & Pacing",
+        "Characters & Development",
+        "Voice Acting & Sound",
+        "Emotional Impact / Climax"
+      ],
+      gaming: [
+        "Gameplay & Mechanics",
+        "Story & Lore",
+        "Visuals & Art Direction",
+        "Audio & Soundtrack",
+        "Performance & Polish"
+      ],
+      movies: [
+        "Story & Screenplay",
+        "Direction",
+        "Acting & Cast",
+        "Cinematography & Visuals",
+        "Score & Sound Design"
+      ],
+      webseries: [
+        "Story & Worldbuilding",
+        "Direction & Pacing",
+        "Acting & Characters",
+        "Cinematography & Production",
+        "Score & Sound"
+      ]
+    };
+
+    // Preloaded Rich Sample Data covering all 4 categories
+    const SAMPLE_DATA = [
+      {
+        id: "sample_game_1",
+        category: "gaming",
+        title: "A Plague Tale: Requiem",
+        image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1000&q=80",
+        director: "Kevin Choteau",
+        studio: "Asobo Studio",
+        releaseYear: "2022",
+        watchedDate: "2026-10-04",
+        playedIn: "PS5",
+        playTime: "18 hrs",
+        ratings: [
+          { name: "Gameplay & Mechanics", score: 8.5 },
+          { name: "Story & Lore", score: 9.5 },
+          { name: "Visuals & Art Direction", score: 10.0 },
+          { name: "Audio & Soundtrack", score: 9.5 },
+          { name: "Performance & Polish", score: 8.5 }
+        ],
+        bestMoments: "Navigating the rat tsunami under red storm clouds in the climax.",
+        bestArc: "Chapter IX: Tales and Revelations on La Cuna island.",
+        pros: ["Unmatched environmental fidelity & rat simulation", "Emotionally staggering finale for Hugo and Amicia", "Haunting score by Olivier Deriviere"],
+        cons: ["Rigid stealth routes in specific encounters", "High frame drops during heavy swarm scenes"],
+        createdAt: 1728000000000
+      },
+      {
+        id: "sample_movie_1",
+        category: "movies",
+        title: "Dune: Part Two",
+        image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1000&q=80",
+        productionHouse: "Legendary Pictures / Warner Bros",
+        baseLanguage: "English",
+        director: "Denis Villeneuve",
+        releaseYear: "2024",
+        watchedDate: "2026-09-18",
+        watchVenueType: "Theatre",
+        theatreName: "Prasads IMAX, Hyderabad",
+        runtime: "2h 46m",
+        ratings: [
+          { name: "Story & Screenplay", score: 9.0 },
+          { name: "Direction", score: 10.0 },
+          { name: "Acting & Cast", score: 9.5 },
+          { name: "Cinematography & Visuals", score: 10.0 },
+          { name: "Score & Sound Design", score: 10.0 }
+        ],
+        bestScene: "Paul mounting the grandfather sandworm for the first time.",
+        bestArc: "Paul Atreides' tragic descent from reluctant hero to absolute emperor.",
+        pros: ["Spectacular sensory masterpiece in IMAX", "Greig Fraser's infrared Giedi Prime gladiatorial sequence", "Zimmer's percussion and synth score shake the core"],
+        cons: ["Brisk pacing in the final 20 minutes"],
+        createdAt: 1726000000000
+      },
+      {
+        id: "sample_anime_1",
+        category: "anime",
+        title: "Frieren: Beyond Journey's End",
+        image: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1000&q=80",
+        genre: "Fantasy, Slice of Life, Adventure",
+        baseLanguage: "Japanese",
+        releaseYear: "2023",
+        watchedDate: "2026-07-15",
+        whereWatched: "Crunchyroll",
+        theatreName: "",
+        ratings: [
+          { name: "Animation & Art", score: 10.0 },
+          { name: "Story & Pacing", score: 9.5 },
+          { name: "Characters & Development", score: 10.0 },
+          { name: "Voice Acting & Sound", score: 9.5 },
+          { name: "Emotional Impact / Climax", score: 10.0 }
+        ],
+        bestCharacterArc: "Frieren slowly understanding the value of ephemeral human connections.",
+        bestCharacter: "Frieren",
+        bestScene: "Frieren vs. Aura the Guillotine (Aura, commit suicide).",
+        pros: ["Poetic exploration of time and grief", "Madhouse's fluid, breathtaking magical choreography", "Evan Call's Celtic orchestral soundtrack"],
+        cons: ["Mellow tempo might feel slow for pure battle-shonen fans"],
+        createdAt: 1721000000000
+      },
+      {
+        id: "sample_series_1",
+        category: "webseries",
+        title: "Severance (Season 1)",
+        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80",
+        productionHouse: "Red Hour Productions",
+        baseLanguage: "English",
+        director: "Ben Stiller & Aoife McArdle",
+        releaseYear: "2022",
+        watchedDate: "2025-11-28",
+        watchVenueType: "OTT",
+        whereWatched: "Apple TV+",
+        theatreName: "",
+        runtime: "9 Episodes (~7.5 hrs)",
+        ratings: [
+          { name: "Story & Worldbuilding", score: 10.0 },
+          { name: "Direction & Pacing", score: 9.5 },
+          { name: "Acting & Characters", score: 10.0 },
+          { name: "Cinematography & Production", score: 9.5 },
+          { name: "Score & Sound", score: 9.0 }
+        ],
+        bestScene: "The overtime contingency countdown in the season finale.",
+        bestArc: "The gradual awakening and rebellious pact of the Macrodata Refinement team.",
+        pros: ["Taut, nerve-wracking season finale", "Eerie symmetrical cinematography & corporate satire", "Trophy-worthy performances from Adam Scott and Patricia Arquette"],
+        cons: ["Leaves on a massive cliffhanger"],
+        createdAt: 1701000000000
+      }
+    ];
+
+    // ==========================================
+    // STATE
+    // ==========================================
+    let entries = [];
+    let isAdmin = false;
+    let currentCategory = "all";
+    let searchQuery = "";
+
+    function init() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          entries = JSON.parse(stored);
+        } catch (e) {
+          entries = SAMPLE_DATA;
+        }
+      } else {
+        entries = SAMPLE_DATA;
+        saveToStorage();
+      }
+
+      if (sessionStorage.getItem("abhijeet_admin_session") === "true") {
+        isAdmin = true;
+      }
+
+      updateAdminUI();
+      populateYearFilter();
+      updateCategoryCounts();
+      renderCards();
+    }
+
+    function saveToStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      populateYearFilter();
+      updateCategoryCounts();
+    }
+
+    function getMasterPass() {
+      return localStorage.getItem(PASS_STORAGE_KEY) || DEFAULT_MASTER_PASS;
+    }
+
+    function setMasterPass(newPass) {
+      localStorage.setItem(PASS_STORAGE_KEY, newPass);
+    }
+
+    // ==========================================
+    // NOTIFICATIONS & MODALS
+    // ==========================================
+    function showToast(message, type = "success") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      const icon = type === "success" ? "fa-circle-check text-emerald-400" : "fa-circle-exclamation text-rose-400";
+      const border = type === "success" ? "border-emerald-500/30" : "border-rose-500/30";
+
+      toast.className = `flex items-center gap-3 px-4 py-3 bg-surface-card border ${border} rounded-xl shadow-2xl text-xs text-white pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0`;
+      toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+      
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove("translate-y-2", "opacity-0"), 10);
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function confirmAction(title, message, callback) {
+      const modal = document.getElementById("confirmModal");
+      document.getElementById("confirmTitle").textContent = title;
+      document.getElementById("confirmMsg").textContent = message;
+      
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      const cancelBtn = document.getElementById("confirmCancelBtn");
+      const okBtn = document.getElementById("confirmOkBtn");
+
+      function cleanUp() {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        cancelBtn.removeEventListener("click", onCancel);
+        okBtn.removeEventListener("click", onOk);
+      }
+
+      function onCancel() { cleanUp(); }
+      function onOk() { cleanUp(); callback(); }
+
+      cancelBtn.addEventListener("click", onCancel);
+      okBtn.addEventListener("click", onOk);
+    }
+
+    // ==========================================
+    // BACKUP & RESTORE (EXPORT / IMPORT JSON)
+    // ==========================================
+    function exportDataBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entries, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `abhijeet_library_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("Library backup downloaded as JSON!");
+    }
+
+    function triggerImport() {
+      document.getElementById("importFileInput").click();
+    }
+
+    function handleFileImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (Array.isArray(parsed)) {
+            confirmAction(
+              "Import Data",
+              `Replace current library with ${parsed.length} entries from this backup file?`,
+              () => {
+                entries = parsed;
+                saveToStorage();
+                renderCards();
+                showToast("Library successfully restored from backup!");
+              }
+            );
+          } else {
+            showToast("Invalid JSON file structure.", "error");
+          }
+        } catch (err) {
+          showToast("Error reading JSON file.", "error");
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    }
+
+    // ==========================================
+    // ADMIN AUTH
+    // ==========================================
+    function toggleAdminAccess() {
+      if (isAdmin) {
+        isAdmin = false;
+        sessionStorage.removeItem("abhijeet_admin_session");
+        updateAdminUI();
+        renderCards();
+        showToast("Admin session locked.");
+      } else {
+        document.getElementById("adminPassInput").value = "";
+        document.getElementById("passError").classList.add("hidden");
+        document.getElementById("passModal").classList.remove("hidden");
+        document.getElementById("passModal").classList.add("flex");
+        document.getElementById("adminPassInput").focus();
+      }
+    }
+
+    function closePassModal() {
+      document.getElementById("passModal").classList.add("hidden");
+      document.getElementById("passModal").classList.remove("flex");
+    }
+
+    function handlePassSubmit(e) {
+      e.preventDefault();
+      const entered = document.getElementById("adminPassInput").value.trim();
+      if (entered === getMasterPass()) {
+        isAdmin = true;
+        sessionStorage.setItem("abhijeet_admin_session", "true");
+        closePassModal();
+        updateAdminUI();
+        renderCards();
+        showToast("Admin unlocked! Welcome back, Abhijeet.");
+      } else {
+        document.getElementById("passError").classList.remove("hidden");
+      }
+    }
+
+    function updateAdminUI() {
+      const lockIcon = document.getElementById("lockIcon");
+      const label = document.getElementById("adminBtnLabel");
+      const addBtn = document.getElementById("addEntryBtn");
+      const settingsBtn = document.getElementById("adminSettingsBtn");
+      const importBtn = document.getElementById("importBtn");
+      const badge = document.getElementById("adminBadge");
+
+      if (isAdmin) {
+        lockIcon.className = "fa-solid fa-lock-open text-emerald-400";
+        label.textContent = "Lock Admin";
+        addBtn.classList.remove("hidden");
+        addBtn.classList.add("flex");
+        settingsBtn.classList.remove("hidden");
+        settingsBtn.classList.add("flex");
+        importBtn.classList.remove("hidden");
+        importBtn.classList.add("flex");
+        badge.classList.remove("hidden");
+      } else {
+        lockIcon.className = "fa-solid fa-lock text-brand-500";
+        label.textContent = "Unlock Admin";
+        addBtn.classList.add("hidden");
+        addBtn.classList.remove("flex");
+        settingsBtn.classList.add("hidden");
+        settingsBtn.classList.remove("flex");
+        importBtn.classList.add("hidden");
+        importBtn.classList.remove("flex");
+        badge.classList.add("hidden");
+      }
+    }
+
+    function openPassChangeModal() {
+      if (!isAdmin) return;
+      document.getElementById("passChangeForm").reset();
+      document.getElementById("passChangeError").classList.add("hidden");
+      document.getElementById("passChangeModal").classList.remove("hidden");
+      document.getElementById("passChangeModal").classList.add("flex");
+    }
+
+    function closePassChangeModal() {
+      document.getElementById("passChangeModal").classList.add("hidden");
+      document.getElementById("passChangeModal").classList.remove("flex");
+    }
+
+    function handlePasscodeChange(e) {
+      e.preventDefault();
+      const currentInput = document.getElementById("currentPassInput").value.trim();
+      const newInput = document.getElementById("newPassInput").value.trim();
+      const confirmInput = document.getElementById("confirmNewPassInput").value.trim();
+      const errorEl = document.getElementById("passChangeError");
+
+      if (currentInput !== getMasterPass()) {
+        errorEl.textContent = "Current passcode is incorrect.";
+        errorEl.classList.remove("hidden");
+        return;
+      }
+      if (newInput !== confirmInput) {
+        errorEl.textContent = "New passcodes do not match.";
+        errorEl.classList.remove("hidden");
+        return;
+      }
+      if (newInput.length < 4) {
+        errorEl.textContent = "Passcode must be at least 4 characters.";
+        errorEl.classList.remove("hidden");
+        return;
+      }
+
+      setMasterPass(newInput);
+      closePassChangeModal();
+      showToast("Passcode successfully updated!");
+    }
+
+    // ==========================================
+    // FILTERING, SEARCH & YEAR/MONTH LOGIC
+    // ==========================================
+    function applyCategoryFilter(cat) {
+      currentCategory = cat;
+      document.querySelectorAll(".filter-btn").forEach(btn => {
+        const matches = btn.getAttribute("data-filter") === cat;
+        if (matches) {
+          btn.classList.add("bg-brand-600", "text-white", "shadow-sm");
+          btn.classList.remove("text-gray-400");
+        } else {
+          btn.classList.remove("bg-brand-600", "text-white", "shadow-sm");
+          btn.classList.add("text-gray-400");
+        }
+      });
+      renderCards();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.toLowerCase().trim();
+      renderCards();
+    }
+
+    function updateCategoryCounts() {
+      document.getElementById("countAll").textContent = entries.length;
+      document.getElementById("countGaming").textContent = entries.filter(e => e.category === "gaming").length;
+      document.getElementById("countMovies").textContent = entries.filter(e => e.category === "movies").length;
+      document.getElementById("countAnime").textContent = entries.filter(e => e.category === "anime").length;
+      document.getElementById("countWebseries").textContent = entries.filter(e => e.category === "webseries").length;
+    }
+
+    function populateYearFilter() {
+      const yearSelect = document.getElementById("yearFilter");
+      const currentVal = yearSelect.value;
+      const years = new Set();
+
+      entries.forEach(e => {
+        if (e.watchedDate) {
+          const yr = e.watchedDate.split("-")[0];
+          if (yr) years.add(yr);
+        }
+      });
+
+      const sortedYears = Array.from(years).sort((a, b) => b - a);
+
+      let options = `<option value="all">All Watched/Played Years</option>`;
+      sortedYears.forEach(y => {
+        options += `<option value="${y}" ${currentVal === y ? 'selected' : ''}>${y}</option>`;
+      });
+
+      yearSelect.innerHTML = options;
+    }
+
+    function resetDateFilters() {
+      document.getElementById("yearFilter").value = "all";
+      document.getElementById("monthFilter").value = "all";
+      renderCards();
+    }
+
+    function resetAllFilters() {
+      currentCategory = "all";
+      searchQuery = "";
+      document.getElementById("searchInput").value = "";
+      document.getElementById("yearFilter").value = "all";
+      document.getElementById("monthFilter").value = "all";
+      document.getElementById("sortSelect").value = "watchedDate";
+      applyCategoryFilter("all");
+    }
+
+    function calculateAverage(ratings) {
+      if (!ratings || ratings.length === 0) return "0.0";
+      const total = ratings.reduce((sum, r) => sum + parseFloat(r.score || 0), 0);
+      return (total / ratings.length).toFixed(1);
+    }
+
+    function formatDateDisplay(dateStr, cat) {
+      if (!dateStr) return "";
+      const [year, month, day] = dateStr.split("-");
+      const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      const monthLabel = MONTH_NAMES[dateObj.getMonth()];
+      const verb = cat === "gaming" ? "Played" : "Watched";
+      return `${verb} on ${monthLabel} ${parseInt(day)}, ${year}`;
+    }
+
+    // ==========================================
+    // CARD RENDERING
+    // ==========================================
+    function getCategoryColorClass(cat) {
+      switch(cat) {
+        case "gaming": return "bg-cat-gaming text-white";
+        case "movies": return "bg-cat-movies text-black";
+        case "anime": return "bg-cat-anime text-white";
+        case "webseries": return "bg-cat-webseries text-black";
+        default: return "bg-brand-600 text-white";
+      }
+    }
+
+    function getCategoryIcon(cat) {
+      switch(cat) {
+        case "gaming": return "fa-gamepad";
+        case "movies": return "fa-film";
+        case "anime": return "fa-dragon";
+        case "webseries": return "fa-tv";
+        default: return "fa-compact-disc";
+      }
+    }
+
+    function renderCards() {
+      const grid = document.getElementById("cardsGrid");
+      const emptyState = document.getElementById("emptyState");
+      const sortBy = document.getElementById("sortSelect").value;
+      const selectedYear = document.getElementById("yearFilter").value;
+      const selectedMonth = document.getElementById("monthFilter").value;
+      const resetDateBtn = document.getElementById("resetDateFiltersBtn");
+      const filterStatus = document.getElementById("filterStatus");
+      const activeFilterBadge = document.getElementById("activeFilterBadge");
+
+      grid.innerHTML = "";
+
+      if (selectedYear !== "all" || selectedMonth !== "all") {
+        resetDateBtn.classList.remove("hidden");
+        filterStatus.classList.remove("hidden");
+        filterStatus.classList.add("flex");
+        const yrLabel = selectedYear === "all" ? "Any Year" : selectedYear;
+        const moLabel = selectedMonth === "all" ? "Any Month" : MONTH_NAMES[parseInt(selectedMonth)];
+        activeFilterBadge.textContent = `${moLabel} • ${yrLabel}`;
+      } else {
+        resetDateBtn.classList.add("hidden");
+        filterStatus.classList.add("hidden");
+        filterStatus.classList.remove("flex");
+      }
+
+      let filtered = entries.filter(item => {
+        // Category filter
+        const matchesCat = currentCategory === "all" || item.category === currentCategory;
+
+        // Search filter (searches across title, director, studio, genre, character, etc.)
+        const matchString = [
+          item.title,
+          item.director,
+          item.studio,
+          item.genre,
+          item.productionHouse,
+          item.playedIn,
+          item.whereWatched,
+          item.theatreName,
+          item.bestCharacter,
+          item.baseLanguage
+        ].filter(Boolean).join(" ").toLowerCase();
+
+        const matchesSearch = !searchQuery || matchString.includes(searchQuery);
+
+        // Year filter
+        let matchesYear = true;
+        if (selectedYear !== "all") {
+          matchesYear = item.watchedDate && item.watchedDate.startsWith(selectedYear);
+        }
+
+        // Month filter
+        let matchesMonth = true;
+        if (selectedMonth !== "all") {
+          if (!item.watchedDate) {
+            matchesMonth = false;
+          } else {
+            const itemMonth = parseInt(item.watchedDate.split("-")[1], 10) - 1;
+            matchesMonth = itemMonth === parseInt(selectedMonth, 10);
+          }
+        }
+
+        return matchesCat && matchesSearch && matchesYear && matchesMonth;
+      });
+
+      // Sorting logic
+      filtered.sort((a, b) => {
+        if (sortBy === "watchedDate") {
+          return new Date(b.watchedDate || 0) - new Date(a.watchedDate || 0);
+        }
+        if (sortBy === "highest") {
+          return parseFloat(calculateAverage(b.ratings)) - parseFloat(calculateAverage(a.ratings));
+        }
+        if (sortBy === "releaseYear") {
+          return parseInt(b.releaseYear || 0) - parseInt(a.releaseYear || 0);
+        }
+        if (sortBy === "title") {
+          return a.title.localeCompare(b.title);
+        }
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove("hidden");
+        emptyState.classList.add("flex");
+        return;
+      } else {
+        emptyState.classList.add("hidden");
+        emptyState.classList.remove("flex");
+      }
+
+      filtered.forEach(item => {
+        const overallScore = calculateAverage(item.ratings);
+        const dateFormatted = formatDateDisplay(item.watchedDate, item.category);
+
+        // Secondary metadata line tailored per category
+        let subMetaText = "";
+        if (item.category === "gaming") {
+          subMetaText = `${item.playedIn || "Platform"} • ${item.playTime || ""}`;
+        } else if (item.category === "movies") {
+          const venue = item.watchVenueType === "Theatre" ? `Theatre (${item.theatreName || "Hall"})` : (item.whereWatched || "OTT");
+          subMetaText = `Dir. ${item.director || "Unknown"} • ${venue}`;
+        } else if (item.category === "anime") {
+          subMetaText = `${item.genre || "Anime"} • ${item.whereWatched || "Streaming"}`;
+        } else if (item.category === "webseries") {
+          subMetaText = `${item.runtime || "Series"} • ${item.whereWatched || "OTT"}`;
+        }
+
+        const card = document.createElement("div");
+        card.className = "group bg-surface-card border border-surface-border hover:border-brand-500/40 rounded-2xl overflow-hidden flex flex-col shadow-xl transition-all duration-300 hover:-translate-y-1";
+
+        // Compact previews of top 3 department ratings
+        const ratingsBarsHtml = item.ratings.slice(0, 3).map(r => `
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-gray-400 w-28 truncate">${r.name}</span>
+            <div class="flex-1 bg-surface-subtle h-1.5 rounded-full overflow-hidden">
+              <div class="h-full bg-brand-500 rounded-full" style="width: ${r.score * 10}%"></div>
+            </div>
+            <span class="text-gray-200 font-bold w-6 text-right">${parseFloat(r.score).toFixed(1)}</span>
+          </div>
+        `).join("");
+
+        // Highlight snippet
+        const highlightText = item.bestScene || item.bestMoments || (item.bestCharacter ? `Best Character: ${item.bestCharacter}` : "");
+
+        card.innerHTML = `
+          <!-- Image Banner -->
+          <div class="relative h-48 w-full overflow-hidden bg-surface-subtle">
+            <img 
+              src="${item.image}" 
+              alt="${item.title}" 
+              loading="lazy" 
+              class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              onerror="this.src='https://placehold.co/600x400/151823/8b5cf6?text=No+Cover+Art'"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/40 to-transparent"></div>
+
+            <!-- Badges -->
+            <div class="absolute top-3 left-3 right-3 flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md ${getCategoryColorClass(item.category)} shadow-md flex items-center gap-1.5">
+                <i class="fa-solid ${getCategoryIcon(item.category)}"></i>
+                <span>${item.category}</span>
+              </span>
+
+              <div class="flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 shadow-lg">
+                <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                <span class="font-extrabold text-sm text-white">${overallScore}</span>
+                <span class="text-[10px] text-gray-400">/10</span>
+              </div>
+            </div>
+
+            <!-- Admin Action Overlay -->
+            ${isAdmin ? `
+              <div class="absolute bottom-3 right-3 flex items-center gap-1.5 z-10">
+                <button 
+                  onclick="editEntry('${item.id}', event)" 
+                  class="w-8 h-8 rounded-xl bg-surface-card/90 hover:bg-brand-600 text-gray-200 hover:text-white border border-surface-border flex items-center justify-center transition shadow-lg"
+                  title="Edit Review"
+                >
+                  <i class="fa-solid fa-pen-to-square text-xs"></i>
+                </button>
+                <button 
+                  onclick="deleteEntry('${item.id}', event)" 
+                  class="w-8 h-8 rounded-xl bg-surface-card/90 hover:bg-rose-600 text-gray-200 hover:text-white border border-surface-border flex items-center justify-center transition shadow-lg"
+                  title="Delete Review"
+                >
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            ` : ""}
+          </div>
+
+          <!-- Card Body -->
+          <div class="p-5 flex flex-col flex-1 gap-4">
+            <div>
+              <div class="flex items-center justify-between text-[11px] font-semibold text-brand-400 mb-1">
+                <span>${dateFormatted}</span>
+                <span class="text-gray-500 font-normal">Rel: ${item.releaseYear || 'N/A'}</span>
+              </div>
+              <h3 class="text-base font-bold text-white group-hover:text-brand-400 transition leading-snug line-clamp-1">${item.title}</h3>
+              <p class="text-xs text-gray-400 font-medium mt-0.5 truncate">${subMetaText}</p>
+            </div>
+
+            <!-- Sub Department Ratings -->
+            <div class="bg-surface-base/80 p-3 rounded-xl border border-surface-border/60 flex flex-col gap-2">
+              ${ratingsBarsHtml}
+            </div>
+
+            <!-- Highlight -->
+            ${highlightText ? `
+              <div class="bg-brand-500/10 border-l-2 border-brand-500 px-3 py-2 rounded-r-xl">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-brand-400 block mb-0.5">Highlight</span>
+                <p class="text-xs text-gray-300 italic line-clamp-2">"${highlightText}"</p>
+              </div>
+            ` : ""}
+
+            <!-- Bottom Action: Open Modal -->
+            <div class="mt-auto pt-2 border-t border-surface-border/50 flex justify-between items-center text-xs">
+              <span class="text-gray-500 text-[11px]">${item.ratings.length} departments ranked</span>
+              <button onclick="viewDetails('${item.id}')" class="text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1 group/btn transition">
+                <span>Full Review</span>
+                <i class="fa-solid fa-chevron-right text-[10px] group-hover/btn:translate-x-0.5 transition-transform"></i>
+              </button>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // DYNAMIC FORM FIELD GENERATION
+    // ==========================================
+    function switchCategoryFields(cat, existingData = null) {
+      const container = document.getElementById("dynamicFieldsContainer");
+      const highlightsContainer = document.getElementById("dynamicHighlightsContainer");
+      const labels = SECTIONS_CONFIG[cat];
+
+      // Update Section Labels for Sliders
+      for (let i = 0; i < 5; i++) {
+        const el = document.getElementById(`subLabel${i + 1}`);
+        if (el) el.textContent = labels[i];
+      }
+
+      // 1. Build Metadata Fields
+      if (cat === "gaming") {
+        container.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Director</label>
+              <input type="text" id="fDirector" placeholder="e.g. Hideo Kojima, Hidetaka Miyazaki" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.director || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Studio / Developer</label>
+              <input type="text" id="fStudio" placeholder="e.g. Asobo Studio, FromSoftware" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.studio || ''}">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Year of Release</label>
+              <input type="number" id="fReleaseYear" placeholder="2024" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.releaseYear || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Played Date *</label>
+              <input type="date" id="fWatchedDate" required class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.watchedDate || new Date().toISOString().split('T')[0]}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Played In (Platform)</label>
+              <select id="fPlayedIn" class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                <option value="PS5">PS5</option>
+                <option value="PS4">PS4</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Desktop">Desktop</option>
+                <option value="Xbox Series X/S">Xbox Series X/S</option>
+                <option value="Nintendo Switch">Nintendo Switch</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Play Time (hours)</label>
+              <input type="text" id="fPlayTime" placeholder="e.g. 45 hrs" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.playTime || ''}">
+            </div>
+          </div>
+        `;
+        if (existingData?.playedIn) {
+          document.getElementById("fPlayedIn").value = existingData.playedIn;
+        }
+
+        highlightsContainer.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-indigo-400 mb-1.5"><i class="fa-solid fa-gamepad mr-1"></i> Best Gaming Arc / Episode</label>
+              <input type="text" id="fBestArc" placeholder="e.g. Chapter 9, Act II, The Bloody Baron" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestArc || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-indigo-400 mb-1.5"><i class="fa-solid fa-trophy mr-1"></i> Best Moments</label>
+              <input type="text" id="fBestMoments" placeholder="e.g. Escaping the burning castle at sunrise" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestMoments || ''}">
+            </div>
+          </div>
+        `;
+      } else if (cat === "movies") {
+        container.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Director</label>
+              <input type="text" id="fDirector" placeholder="e.g. Christopher Nolan" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.director || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Production House</label>
+              <input type="text" id="fProductionHouse" placeholder="e.g. Warner Bros, A24, Mythri" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.productionHouse || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Base Language</label>
+              <input type="text" id="fBaseLanguage" placeholder="e.g. English, Telugu, Hindi, Japanese" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.baseLanguage || ''}">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Year of Release</label>
+              <input type="number" id="fReleaseYear" placeholder="2024" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.releaseYear || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Watched Date *</label>
+              <input type="date" id="fWatchedDate" required class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.watchedDate || new Date().toISOString().split('T')[0]}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Watched In</label>
+              <select id="fWatchVenueType" onchange="toggleTheatreInput(this.value)" class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                <option value="OTT">OTT Platform</option>
+                <option value="Theatre">Theatre (with name)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Run Time (hours/mins)</label>
+              <input type="text" id="fRuntime" placeholder="e.g. 2h 45m" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.runtime || ''}">
+            </div>
+          </div>
+          <div id="venueDetailBox" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div id="ottSelectCol">
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">OTT Platform</label>
+              <select id="fWhereWatched" class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                <option value="Netflix">Netflix</option>
+                <option value="Prime Video">Prime Video</option>
+                <option value="Disney+ Hotstar">Disney+ Hotstar</option>
+                <option value="Apple TV+">Apple TV+</option>
+                <option value="JioCinema">JioCinema</option>
+                <option value="SonyLIV">SonyLIV</option>
+                <option value="Zee5">Zee5</option>
+                <option value="Aha">Aha</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div id="theatreCol" class="hidden">
+              <label class="block text-xs font-semibold text-amber-400 mb-1.5">Theatre Name</label>
+              <input type="text" id="fTheatreName" placeholder="e.g. Prasads IMAX, PVR Inox Screen 4" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.theatreName || ''}">
+            </div>
+          </div>
+        `;
+        if (existingData?.watchVenueType) {
+          document.getElementById("fWatchVenueType").value = existingData.watchVenueType;
+          toggleTheatreInput(existingData.watchVenueType);
+        }
+        if (existingData?.whereWatched) {
+          document.getElementById("fWhereWatched").value = existingData.whereWatched;
+        }
+
+        highlightsContainer.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-amber-400 mb-1.5"><i class="fa-solid fa-clapperboard mr-1"></i> Best Scene</label>
+              <input type="text" id="fBestScene" placeholder="e.g. Interstellar docking scene or sand-ride" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestScene || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-amber-400 mb-1.5"><i class="fa-solid fa-masks-theater mr-1"></i> Best Arc / Episode</label>
+              <input type="text" id="fBestArc" placeholder="e.g. Oppenheimer security hearing confrontation" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestArc || ''}">
+            </div>
+          </div>
+        `;
+      } else if (cat === "anime") {
+        container.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Genre</label>
+              <input type="text" id="fGenre" placeholder="e.g. Shonen, Seinen, Isekai, Dark Fantasy" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.genre || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Base Language</label>
+              <input type="text" id="fBaseLanguage" placeholder="e.g. Japanese, English" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.baseLanguage || 'Japanese'}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Year of Release</label>
+              <input type="number" id="fReleaseYear" placeholder="2023" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.releaseYear || ''}">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Watch Date *</label>
+              <input type="date" id="fWatchedDate" required class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.watchedDate || new Date().toISOString().split('T')[0]}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Where Did you watch</label>
+              <select id="fWhereWatched" class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                <option value="Crunchyroll">Crunchyroll</option>
+                <option value="Netflix">Netflix</option>
+                <option value="Prime Video">Prime Video</option>
+                <option value="Disney+ Hotstar">Disney+ Hotstar</option>
+                <option value="Muse Asia">Muse Asia</option>
+                <option value="Theatre">Theatre</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        `;
+        if (existingData?.whereWatched) {
+          document.getElementById("fWhereWatched").value = existingData.whereWatched;
+        }
+
+        highlightsContainer.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-rose-400 mb-1.5"><i class="fa-solid fa-user-astronaut mr-1"></i> Best Character</label>
+              <input type="text" id="fBestCharacter" placeholder="e.g. Levi Ackerman, Frieren" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestCharacter || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-rose-400 mb-1.5"><i class="fa-solid fa-chart-line mr-1"></i> Best Character Arc</label>
+              <input type="text" id="fBestArc" placeholder="e.g. Eren Jaeger's radicalization" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestArc || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-rose-400 mb-1.5"><i class="fa-solid fa-bolt mr-1"></i> Best Scene</label>
+              <input type="text" id="fBestScene" placeholder="e.g. Levi vs Beast Titan" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestScene || ''}">
+            </div>
+          </div>
+        `;
+      } else if (cat === "webseries") {
+        container.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Director / Showrunner</label>
+              <input type="text" id="fDirector" placeholder="e.g. Jesse Armstrong, Craig Mazin" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.director || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Production House / Studio</label>
+              <input type="text" id="fProductionHouse" placeholder="e.g. HBO, Apple Studios, Netflix" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.productionHouse || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Base Language</label>
+              <input type="text" id="fBaseLanguage" placeholder="e.g. English, Hindi, Korean" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.baseLanguage || ''}">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Year of Release</label>
+              <input type="number" id="fReleaseYear" placeholder="2022" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.releaseYear || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Watched Date *</label>
+              <input type="date" id="fWatchedDate" required class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.watchedDate || new Date().toISOString().split('T')[0]}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Watched In</label>
+              <select id="fWatchVenueType" onchange="toggleTheatreInput(this.value)" class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                <option value="OTT">OTT Platform</option>
+                <option value="Theatre">Theatre (with name)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">Series Run Time / Episodes</label>
+              <input type="text" id="fRuntime" placeholder="e.g. 9 Episodes (~8 hrs)" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500" value="${existingData?.runtime || ''}">
+            </div>
+          </div>
+          <div id="venueDetailBox" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div id="ottSelectCol">
+              <label class="block text-xs font-semibold text-gray-300 mb-1.5">OTT Platform</label>
+              <select id="fWhereWatched" class="w-full bg-surface-base border border-surface-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                <option value="Apple TV+">Apple TV+</option>
+                <option value="Netflix">Netflix</option>
+                <option value="Prime Video">Prime Video</option>
+                <option value="Disney+ Hotstar">Disney+ Hotstar</option>
+                <option value="JioCinema">JioCinema</option>
+                <option value="SonyLIV">SonyLIV</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div id="theatreCol" class="hidden">
+              <label class="block text-xs font-semibold text-cyan-400 mb-1.5">Theatre Name</label>
+              <input type="text" id="fTheatreName" placeholder="e.g. Screen 1" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.theatreName || ''}">
+            </div>
+          </div>
+        `;
+        if (existingData?.watchVenueType) {
+          document.getElementById("fWatchVenueType").value = existingData.watchVenueType;
+          toggleTheatreInput(existingData.watchVenueType);
+        }
+        if (existingData?.whereWatched) {
+          document.getElementById("fWhereWatched").value = existingData.whereWatched;
+        }
+
+        highlightsContainer.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-cyan-400 mb-1.5"><i class="fa-solid fa-film mr-1"></i> Best Scene</label>
+              <input type="text" id="fBestScene" placeholder="e.g. Season 1 finale countdown" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestScene || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-cyan-400 mb-1.5"><i class="fa-solid fa-masks-theater mr-1"></i> Best Arc / Episode</label>
+              <input type="text" id="fBestArc" placeholder="e.g. Episode 8: The Defiance" class="w-full bg-surface-base border border-surface-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500" value="${existingData?.bestArc || ''}">
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function toggleTheatreInput(val) {
+      const ottCol = document.getElementById("ottSelectCol");
+      const theatreCol = document.getElementById("theatreCol");
+      if (val === "Theatre") {
+        if (ottCol) ottCol.classList.add("hidden");
+        if (theatreCol) theatreCol.classList.remove("hidden");
+      } else {
+        if (ottCol) ottCol.classList.remove("hidden");
+        if (theatreCol) theatreCol.classList.add("hidden");
+      }
+    }
+
+    function updateLiveScore() {
+      let sum = 0;
+      for (let i = 1; i <= 5; i++) {
+        const val = parseFloat(document.getElementById(`subVal${i}`).value);
+        document.getElementById(`subValDisp${i}`).textContent = val.toFixed(1);
+        sum += val;
+      }
+      const avg = (sum / 5).toFixed(1);
+      document.getElementById("calculatedAvgScore").textContent = avg;
+    }
+
+    // ==========================================
+    // ADD & EDIT ACTIONS
+    // ==========================================
+    function openEntryModal(editId = null) {
+      const modal = document.getElementById("entryModal");
+      const form = document.getElementById("entryForm");
+      const title = document.getElementById("modalTitle");
+      const idInput = document.getElementById("entryId");
+
+      form.reset();
+
+      if (editId) {
+        const item = entries.find(e => e.id === editId);
+        if (!item) return;
+
+        title.textContent = `Edit "${item.title}"`;
+        idInput.value = item.id;
+        document.querySelector(`input[name="entryCatRadio"][value="${item.category}"]`).checked = true;
+        switchCategoryFields(item.category, item);
+
+        document.getElementById("fTitle").value = item.title;
+        document.getElementById("fImage").value = item.image;
+
+        // Sliders
+        item.ratings.forEach((r, idx) => {
+          const slider = document.getElementById(`subVal${idx + 1}`);
+          if (slider) slider.value = r.score;
+        });
+
+        document.getElementById("fPros").value = item.pros ? item.pros.join(", ") : "";
+        document.getElementById("fCons").value = item.cons ? item.cons.join(", ") : "";
+      } else {
+        title.textContent = "Add Review Entry";
+        idInput.value = "";
+        const defaultCat = currentCategory === "all" ? "gaming" : currentCategory;
+        document.querySelector(`input[name="entryCatRadio"][value="${defaultCat}"]`).checked = true;
+        switchCategoryFields(defaultCat);
+
+        for (let i = 1; i <= 5; i++) {
+          document.getElementById(`subVal${i}`).value = 8;
+        }
+      }
+
+      updateLiveScore();
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeEntryModal() {
+      const modal = document.getElementById("entryModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function handleEntrySubmit(e) {
+      e.preventDefault();
+      if (!isAdmin) {
+        showToast("Please authenticate in admin mode first.", "error");
+        return;
+      }
+
+      const id = document.getElementById("entryId").value;
+      const cat = document.querySelector('input[name="entryCatRadio"]:checked').value;
+      const labels = SECTIONS_CONFIG[cat];
+
+      const ratings = [];
+      for (let i = 0; i < 5; i++) {
+        ratings.push({
+          name: labels[i],
+          score: parseFloat(document.getElementById(`subVal${i + 1}`).value)
+        });
+      }
+
+      const prosRaw = document.getElementById("fPros").value;
+      const consRaw = document.getElementById("fCons").value;
+      const pros = prosRaw ? prosRaw.split(",").map(p => p.trim()).filter(Boolean) : [];
+      const cons = consRaw ? consRaw.split(",").map(c => c.trim()).filter(Boolean) : [];
+
+      const basePayload = {
+        id: id || "entry_" + Date.now(),
+        category: cat,
+        title: document.getElementById("fTitle").value.trim(),
+        image: document.getElementById("fImage").value.trim(),
+        ratings: ratings,
+        pros: pros,
+        cons: cons,
+        watchedDate: document.getElementById("fWatchedDate").value,
+        releaseYear: document.getElementById("fReleaseYear")?.value || "",
+        createdAt: id ? (entries.find(e => e.id === id)?.createdAt || Date.now()) : Date.now()
+      };
+
+      // Extract category specific properties
+      if (cat === "gaming") {
+        basePayload.director = document.getElementById("fDirector")?.value.trim() || "";
+        basePayload.studio = document.getElementById("fStudio")?.value.trim() || "";
+        basePayload.playedIn = document.getElementById("fPlayedIn")?.value || "PS5";
+        basePayload.playTime = document.getElementById("fPlayTime")?.value.trim() || "";
+        basePayload.bestArc = document.getElementById("fBestArc")?.value.trim() || "";
+        basePayload.bestMoments = document.getElementById("fBestMoments")?.value.trim() || "";
+      } else if (cat === "movies") {
+        basePayload.director = document.getElementById("fDirector")?.value.trim() || "";
+        basePayload.productionHouse = document.getElementById("fProductionHouse")?.value.trim() || "";
+        basePayload.baseLanguage = document.getElementById("fBaseLanguage")?.value.trim() || "";
+        basePayload.watchVenueType = document.getElementById("fWatchVenueType")?.value || "OTT";
+        basePayload.whereWatched = document.getElementById("fWhereWatched")?.value || "";
+        basePayload.theatreName = document.getElementById("fTheatreName")?.value.trim() || "";
+        basePayload.runtime = document.getElementById("fRuntime")?.value.trim() || "";
+        basePayload.bestScene = document.getElementById("fBestScene")?.value.trim() || "";
+        basePayload.bestArc = document.getElementById("fBestArc")?.value.trim() || "";
+      } else if (cat === "anime") {
+        basePayload.genre = document.getElementById("fGenre")?.value.trim() || "";
+        basePayload.baseLanguage = document.getElementById("fBaseLanguage")?.value.trim() || "Japanese";
+        basePayload.whereWatched = document.getElementById("fWhereWatched")?.value || "";
+        basePayload.bestCharacter = document.getElementById("fBestCharacter")?.value.trim() || "";
+        basePayload.bestArc = document.getElementById("fBestArc")?.value.trim() || "";
+        basePayload.bestScene = document.getElementById("fBestScene")?.value.trim() || "";
+      } else if (cat === "webseries") {
+        basePayload.director = document.getElementById("fDirector")?.value.trim() || "";
+        basePayload.productionHouse = document.getElementById("fProductionHouse")?.value.trim() || "";
+        basePayload.baseLanguage = document.getElementById("fBaseLanguage")?.value.trim() || "";
+        basePayload.watchVenueType = document.getElementById("fWatchVenueType")?.value || "OTT";
+        basePayload.whereWatched = document.getElementById("fWhereWatched")?.value || "";
+        basePayload.theatreName = document.getElementById("fTheatreName")?.value.trim() || "";
+        basePayload.runtime = document.getElementById("fRuntime")?.value.trim() || "";
+        basePayload.bestScene = document.getElementById("fBestScene")?.value.trim() || "";
+        basePayload.bestArc = document.getElementById("fBestArc")?.value.trim() || "";
+      }
+
+      if (id) {
+        const index = entries.findIndex(e => e.id === id);
+        if (index !== -1) {
+          entries[index] = basePayload;
+          showToast(`Updated "${basePayload.title}"!`);
+        }
+      } else {
+        entries.unshift(basePayload);
+        showToast(`Added "${basePayload.title}" to Abhijeet Library!`);
+      }
+
+      saveToStorage();
+      closeEntryModal();
+      renderCards();
+    }
+
+    function editEntry(id, event) {
+      if (event) event.stopPropagation();
+      openEntryModal(id);
+    }
+
+    function deleteEntry(id, event) {
+      if (event) event.stopPropagation();
+      const item = entries.find(e => e.id === id);
+      if (!item) return;
+
+      confirmAction(
+        "Delete Entry",
+        `Are you sure you want to remove "${item.title}" from Abhijeet Library?`,
+        () => {
+          entries = entries.filter(e => e.id !== id);
+          saveToStorage();
+          renderCards();
+          showToast(`Deleted "${item.title}".`, "error");
+        }
+      );
+    }
+
+    // ==========================================
+    // COMPREHENSIVE DETAIL MODAL VIEW
+    // ==========================================
+    function viewDetails(id) {
+      const item = entries.find(e => e.id === id);
+      if (!item) return;
+
+      const overall = calculateAverage(item.ratings);
+      const dateFormatted = formatDateDisplay(item.watchedDate, item.category);
+      const container = document.getElementById("viewModalContent");
+
+      // Dynamic Specifications Table
+      let specs = [];
+      if (item.category === "gaming") {
+        specs = [
+          { label: "Director", val: item.director },
+          { label: "Studio", val: item.studio },
+          { label: "Release Year", val: item.releaseYear },
+          { label: "Platform", val: item.playedIn },
+          { label: "Play Time", val: item.playTime }
+        ];
+      } else if (item.category === "movies") {
+        const venue = item.watchVenueType === "Theatre" ? `Theatre (${item.theatreName || "Cinema"})` : `OTT (${item.whereWatched || "Streaming"})`;
+        specs = [
+          { label: "Director", val: item.director },
+          { label: "Production House", val: item.productionHouse },
+          { label: "Base Language", val: item.baseLanguage },
+          { label: "Release Year", val: item.releaseYear },
+          { label: "Watched Venue", val: venue },
+          { label: "Movie Run Time", val: item.runtime }
+        ];
+      } else if (item.category === "anime") {
+        specs = [
+          { label: "Genre", val: item.genre },
+          { label: "Base Language", val: item.baseLanguage },
+          { label: "Release Year", val: item.releaseYear },
+          { label: "Where Watched", val: item.whereWatched }
+        ];
+      } else if (item.category === "webseries") {
+        const venue = item.watchVenueType === "Theatre" ? `Theatre (${item.theatreName || "Screen"})` : `OTT (${item.whereWatched || "Streaming"})`;
+        specs = [
+          { label: "Showrunner / Director", val: item.director },
+          { label: "Production House", val: item.productionHouse },
+          { label: "Base Language", val: item.baseLanguage },
+          { label: "Release Year", val: item.releaseYear },
+          { label: "Watched Venue", val: venue },
+          { label: "Series Run Time", val: item.runtime }
+        ];
+      }
+
+      const specsHtml = specs.filter(s => s.val).map(s => `
+        <div class="bg-surface-subtle p-2.5 rounded-xl border border-surface-border/60">
+          <span class="text-[10px] uppercase font-bold text-gray-400 block">${s.label}</span>
+          <span class="text-xs font-semibold text-white truncate block">${s.val}</span>
+        </div>
+      `).join("");
+
+      // Sub-ratings breakdown
+      const ratingsListHtml = item.ratings.map(r => `
+        <div>
+          <div class="flex justify-between text-xs font-semibold text-gray-300 mb-1">
+            <span>${r.name}</span>
+            <span class="text-brand-400 font-bold">${parseFloat(r.score).toFixed(1)} / 10</span>
+          </div>
+          <div class="bg-surface-subtle h-2 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-brand-600 to-indigo-500 rounded-full" style="width: ${r.score * 10}%"></div>
+          </div>
+        </div>
+      `).join("");
+
+      // Highlights Box
+      let highlightBlocks = [];
+      if (item.bestCharacter) highlightBlocks.push({ label: "Best Character", text: item.bestCharacter, icon: "fa-user-astronaut text-rose-400" });
+      if (item.bestArc) highlightBlocks.push({ label: "Best Character Arc / Story Arc", text: item.bestArc, icon: "fa-chart-line text-indigo-400" });
+      if (item.bestScene) highlightBlocks.push({ label: "Best Scene", text: item.bestScene, icon: "fa-clapperboard text-amber-400" });
+      if (item.bestMoments) highlightBlocks.push({ label: "Best Gaming Moments", text: item.bestMoments, icon: "fa-trophy text-amber-400" });
+
+      const highlightsHtml = highlightBlocks.map(h => `
+        <div class="bg-surface-base p-3.5 rounded-xl border border-surface-border">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 mb-1">
+            <i class="fa-solid ${h.icon}"></i> ${h.label}
+          </span>
+          <p class="text-xs text-gray-200 italic leading-relaxed">"${h.text}"</p>
+        </div>
+      `).join("");
+
+      const prosHtml = item.pros && item.pros.length > 0 
+        ? item.pros.map(p => `<li class="flex items-start gap-2 text-xs text-gray-300"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i><span>${p}</span></li>`).join("")
+        : '<li class="text-xs text-gray-500 italic">None noted.</li>';
+
+      const consHtml = item.cons && item.cons.length > 0
+        ? item.cons.map(c => `<li class="flex items-start gap-2 text-xs text-gray-300"><i class="fa-solid fa-circle-xmark text-rose-400 mt-0.5"></i><span>${c}</span></li>`).join("")
+        : '<li class="text-xs text-gray-500 italic">None noted.</li>';
+
+      container.innerHTML = `
+        <button onclick="closeViewModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-base z-10">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="space-y-6">
+          <!-- Hero Header -->
+          <div class="relative rounded-2xl overflow-hidden h-60 border border-surface-border">
+            <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/65 to-transparent"></div>
+            
+            <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${getCategoryColorClass(item.category)}">
+                    <i class="fa-solid ${getCategoryIcon(item.category)} mr-1"></i>${item.category}
+                  </span>
+                  <span class="text-[11px] font-semibold text-gray-300 bg-black/60 px-2.5 py-0.5 rounded-lg border border-white/10">
+                    <i class="fa-regular fa-calendar-check mr-1 text-brand-400"></i>${dateFormatted}
+                  </span>
+                </div>
+                <h2 class="text-2xl font-black text-white leading-tight">${item.title}</h2>
+              </div>
+
+              <div class="bg-black/85 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/10 text-center shadow-xl flex-shrink-0">
+                <span class="block text-[10px] uppercase font-bold text-gray-400 tracking-wider">Final Rating</span>
+                <div class="flex items-center justify-center gap-1 text-amber-400 font-black text-xl">
+                  <i class="fa-solid fa-star text-sm"></i>
+                  <span>${overall}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Specs Matrix -->
+          ${specsHtml ? `
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              ${specsHtml}
+            </div>
+          ` : ""}
+
+          <!-- Section Ratings -->
+          <div class="bg-surface-base p-5 rounded-2xl border border-surface-border space-y-3.5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-brand-400"></i> Rating Across Different Sections
+            </h4>
+            <div class="space-y-3">
+              ${ratingsListHtml}
+            </div>
+          </div>
+
+          <!-- Highlights (Arcs, Characters, Best Scenes) -->
+          ${highlightsHtml ? `
+            <div class="space-y-2.5">
+              ${highlightsHtml}
+            </div>
+          ` : ""}
+
+          <!-- Pros and Cons -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-emerald-950/20 border border-emerald-500/20 p-4 rounded-2xl">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-thumbs-up"></i> Pros
+              </h5>
+              <ul class="space-y-2">${prosHtml}</ul>
+            </div>
+            <div class="bg-rose-950/20 border border-rose-500/20 p-4 rounded-2xl">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-rose-400 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-thumbs-down"></i> Cons
+              </h5>
+              <ul class="space-y-2">${consHtml}</ul>
+            </div>
+          </div>
+
+          <!-- Admin Footer -->
+          ${isAdmin ? `
+            <div class="flex justify-end gap-3 pt-3 border-t border-surface-border">
+              <button onclick="closeViewModal(); editEntry('${item.id}')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-brand-600 hover:bg-brand-500 text-white flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-pen-to-square"></i> Edit Entry
+              </button>
+            </div>
+          ` : ""}
+        </div>
+      `;
+
+      const viewModal = document.getElementById("viewModal");
+      viewModal.classList.remove("hidden");
+      viewModal.classList.add("flex");
+    }
+
+    function closeViewModal() {
+      const viewModal = document.getElementById("viewModal");
+      viewModal.classList.add("hidden");
+      viewModal.classList.remove("flex");
+    }
+
+    // Window click listener to close modals
+    window.addEventListener("click", (e) => {
+      const passModal = document.getElementById("passModal");
+      const passChangeModal = document.getElementById("passChangeModal");
+      const entryModal = document.getElementById("entryModal");
+      const viewModal = document.getElementById("viewModal");
+      if (e.target === passModal) closePassModal();
+      if (e.target === passChangeModal) closePassChangeModal();
+      if (e.target === entryModal) closeEntryModal();
+      if (e.target === viewModal) closeViewModal();
+    });
+
+    // Start on window load
+    window.onload = function() {
+      init();
+    };
+  </script>
+</body>
+</html>
